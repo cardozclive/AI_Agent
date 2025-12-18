@@ -2,6 +2,11 @@ import { createAgent, tool } from "langchain";
 import "dotenv/config"
 import z from "zod";
 
+function weather()
+{
+    
+}
+
 const getWeather = tool((input) => {
 
     return `It's sunny in ${input.city}`
