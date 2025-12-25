@@ -20,11 +20,40 @@ async function weather(city: string) {
     return {
         location: data.location?.name ?? city,
         country: data.location?.country ?? "",
+        lat: data.location?.lat ?? null,
+        lng: data.location?.lon ?? null,
         condition: data.current?.condition?.text ?? "Unavailable",
         tempC: data.current?.temp_c ?? null,
         feelsLikeC: data.current?.feelslike_c ?? null,
         humidity: data.current?.humidity ?? null,
         windKph: data.current?.wind_kph ?? null,
+    };
+}
+
+async function getTimeData(city: string) {
+    const weatherData = await weather(city);
+    if (!weatherData.lat || !weatherData.lng) {
+        throw new Error("Could not get coordinates for city");
+    }
+
+    const url = `http://api.timezonedb.com/v2.1/get-time-zone?key=O909FBQ26JMY&format=json&by=position&lat=${weatherData.lat}&lng=${weatherData.lng}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(`Time API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data.status !== 'OK') {
+        throw new Error(data.message || 'Time API error');
+    }
+
+    return {
+        city: data.cityName || weatherData.location,
+        country: data.countryName || weatherData.country,
+        time: data.formatted,
+        zone: data.zoneName,
+        abbreviation: data.abbreviation
     };
 }
 
@@ -51,11 +80,11 @@ const getWeather = tool(
     }
 );
 
-const getTime = tool((input) => {
-
-    return `The current time in ${input.city} is 15:00 P.M.`
-
-},
+const getTime = tool(
+    async (input) => {
+        const data = await getTimeData(input.city);
+        return `The current time in ${data.city}${data.country ? `, ${data.country}` : ""} is ${data.time} (${data.abbreviation})`;
+    },
     {
         name: "get_time",
         description: "Get current time for a given city",
