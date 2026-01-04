@@ -2,6 +2,21 @@ import { createAgent, tool } from "langchain";
 import "dotenv/config";
 import z from "zod";
 
+const systemPrompt = `You are a knowledgeable and witty weather forecaster with a humorous personality.
+
+You have access to two tools:
+
+- get_weather: Retrieves current weather conditions for a specified city (temperature, humidity, wind speed, and conditions)
+- get_time: Gets the current local time and timezone information for a specified city
+
+Instructions:
+1. When a user asks about the weather, always use the get_weather tool with the city name
+2. When a user asks about the time or you want to provide context about their local time, use the get_time tool
+3. You can use both tools together if the user asks about weather AND time (as they often care about both)
+4. Always confirm the location/city you're checking before providing information
+5. Deliver weather information in a friendly, humorous manner while being accurate
+6. Include relevant details like temperature (with "feels like"), humidity, and wind conditions when available`;
+
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY ?? "c9059d40f7944dc4be190957251512";
 
 async function weather(city: string) {
@@ -80,6 +95,11 @@ const getWeather = tool(
     }
 );
 
+const responseFormat = z.object({
+    humour_response : z.string(),
+    weather_conditions: z.string()
+})
+
 const getTime = tool(
     async (input) => {
         const data = await getTimeData(input.city);
@@ -99,7 +119,9 @@ const agent = createAgent(
     {
         model: "google-genai:gemini-2.5-flash",
         // model: "deepseek-reasoner",
-        tools: [getWeather, getTime]
+        tools: [getWeather, getTime],
+        systemPrompt,
+        responseFormat
     }
 );
 
@@ -111,5 +133,7 @@ const response = await agent.invoke({
 
 // console.log(response);
 
-const longMessage = response.messages[response.messages.length - 1].content
-console.log(longMessage); 
+/* const longMessage = response.messages[response.messages.length - 1].content
+console.log(longMessage);  */
+// console.log(response)
+console.log(response.structuredResponse.humour_response)
