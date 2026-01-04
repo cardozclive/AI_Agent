@@ -73,4 +73,4 @@ const response = await agent.invoke({
 }, config)
 
 // console.log(response.messages[response.messages.length-1].content)
-console.log(response.structuredResponse.humour_response)
+console.log(response.structuredResponse.humour_response+response.structuredResponse.weather_conditions)
