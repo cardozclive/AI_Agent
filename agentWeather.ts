@@ -1,6 +1,7 @@
-import { createAgent, tool } from "langchain";
+import { createAgent, initChatModel, tool } from "langchain";
 import "dotenv/config";
 import z from "zod";
+import { MemorySaver } from "@langchain/langgraph"
 
 const systemPrompt = `You are a knowledgeable and witty weather forecaster with a humorous personality.
 
@@ -114,6 +115,16 @@ const getTime = tool(
     }
 )
 
+const model = await initChatModel(
+    "google-genai:gemini-2.5-flash",
+    {
+        temperature: 0.7,
+        timeout: 30,
+        max_tokens: 1000
+    }
+)
+const checkpointer = new MemorySaver()
+
 
 const agent = createAgent(
     {
@@ -128,7 +139,7 @@ const agent = createAgent(
 const response = await agent.invoke({
     // messages: [{role: "user", content: "What is the weather in london city"}]
     // messages: [{role: "user", content: "What is the weather in london city"}]
-    messages: [{ role: "user", content: "What is the weather & time in Bournemouth city" }]
+    messages: [{ role: "user", content: "What is the weather & time in bangalore city" }]
 });
 
 // console.log(response);
